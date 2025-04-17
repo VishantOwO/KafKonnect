@@ -65,15 +65,22 @@
     var topic = [[${topic}]];
 
     function connect() {
-        var socket = new SockJS('/ws');
-        stompClient = Stomp.over(socket);
-        stompClient.connect({}, function(frame) {
-            console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/messages', function(message) {
-                showMessage(JSON.parse(message.body));
-            });
-        });
+    var socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+
+    var token = localStorage.getItem('jwtToken');
+    var headers = {};
+    if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
     }
+
+    stompClient.connect(headers, function(frame) {
+        console.log('Connected: ' + frame);
+        stompClient.subscribe('/topic/messages', function(message) {
+            showMessage(JSON.parse(message.body));
+        });
+    });
+}
 
     function disconnect() {
         if (stompClient !== null) {
@@ -138,6 +145,11 @@
     window.onbeforeunload = function() {
         disconnect();
     };
+    // After successful login
+    function onLoginSuccess(token) {
+        localStorage.setItem('jwtToken', token);
+        connect();
+    }
 </script>
 </body>
 </html>
